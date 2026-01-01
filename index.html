@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Surprise For Fatimaa Apu</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Minimal Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* 
+         * =========================================
+         *  LUXURY DESIGN SYSTEM
+         * =========================================
+         */
+        :root {
+            --bg-deep: #050505;
+            --text-primary: #F2F2F2;
+            --text-secondary: #9CA3AF;
+            --gold-accent: #D4AF37; /* Champagne Gold */
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --glass-surface: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Manrope', sans-serif;
+            --ease-cinematic: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Cinematic Noise Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        #webgl-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* 
+         * =========================================
+         *  UI ARCHITECTURE
+         * =========================================
+         */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.2s var(--ease-cinematic), transform 1.2s var(--ease-cinematic);
+            transform: scale(0.95) translateY(20px);
+        }
+
+        .section.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Typography Hierarchy */
+        h1, h2 {
+            font-family: var(--font-serif);
+            font-weight: 400;
+            color: #fff;
+        }
+
+        .display-text {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .sub-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+        }
+
+        /* The Card Design */
+        .content-card {
+            max-width: 500px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .card-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #d1d1d1;
+            margin-bottom: 2rem;
+        }
+
+        .highlight {
+            color: var(--gold-accent);
+            font-style: italic;
+        }
+
+        /* Minimal Button */
+        .btn-gold {
+            background: transparent;
+            border: 1px solid var(--gold-accent);
+            color: var(--gold-accent);
+            padding: 14px 36px;
+            border-radius: 100px;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.5s var(--ease-cinematic);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-accent);
+            color: #000;
+            box-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        /* Staggered Animation Classes */
+        .anim-element {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s var(--ease-cinematic);
+        }
+        .active .anim-element {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Delays */
+        .active .anim-element:nth-child(1) { transition-delay: 0.1s; }
+        .active .anim-element:nth-child(2) { transition-delay: 0.2s; }
+        .active .anim-element:nth-child(3) { transition-delay: 0.3s; }
+        .active .anim-element:nth-child(4) { transition-delay: 0.4s; }
+
+        /* Timeline Items */
+        .wishes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+        .wish-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .wish-icon { color: var(--gold-accent); font-size: 1.4rem; }
+        .wish-text h4 { font-family: var(--font-serif); font-size: 1.1rem; color: #fff; margin-bottom: 2px; }
+        .wish-text span { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Audio Player Minimal */
+        .audio-player {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .audio-player:hover { opacity: 1; }
+        .equalizer { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
+        .bar { width: 2px; background: #fff; animation: eq 1s infinite ease-in-out; }
+        .bar:nth-child(1) { animation-delay: 0s; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+        .paused .bar { height: 2px; animation: none; }
+        
+        @keyframes eq { 0%,100% { height: 2px; } 50% { height: 12px; } }
+
+        /* Developer Credit */
+        .dev-credit {
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 1.5rem;
+            width: 100%;
+        }
+        .signature {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Noise Texture for Film Effect -->
+    <div class="noise-overlay"></div>
+
+    <!-- 3D Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Audio -->
+    <audio id="bg-audio" loop>
+        <source src="pehla kajal audio.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="audio-player" onclick="toggleAudio()">
+        <span style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">Sound</span>
+        <div class="equalizer paused" id="eq">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-container">
+
+        <!-- 1. LANDING -->
+        <section id="s1" class="section active">
+            <div class="anim-element" style="text-align: center;">
+                <p class="sub-text" style="color: var(--gold-accent);">End of 2025</p>
+                <h1 class="display-text">New Year<br><i>2026</i></h1>
+                <p class="sub-text">A cinematic surprise for you..😚</p>
+                <br>
+                <button class="btn-gold" onclick="navTo(2)">Begin Experience</button>
+            </div>
+        </section>
+
+        <!-- 2. MESSAGE -->
+        <section id="s2" class="section">
+            <div class="content-card anim-element">
+                <i class="ph-light ph-envelope-open" style="font-size: 2rem; color: var(--gold-accent); margin-bottom: 20px;"></i>
+                <h2 style="margin-bottom: 1.5rem;">Fatimaa Apu</h2>
+                <p class="card-text">
+                    As the calendar turns, I wanted to pause and send a wish wrapped in gratitude. You navigate life with such <span class="highlight">grace</span> and <span class="highlight">strength</span>..
+                   
+                </p>
+                <p class="card-text">
+                    "May the coming year bring you the quiet moments of peace you deserve.."
+                </p>
+                </p>
+                <p class="card-text">
+                    "Chat-GPT er text eita, ki likhche ta nijeo jani nah. Bhul kichu thakle maaf kore diyo..🫶🏻😚"
+                </p>
+                <button class="btn-gold" onclick="navTo(3)">The Journey</button>
+            </div>
+        </section>
+
+        <!-- 3. HIGHLIGHTS -->
+        <section id="s3" class="section">
+            <div class="content-card anim-element">
+                <h2 style="margin-bottom: 2rem;">2026 Manifesto</h2>
+                <div class="wishes-list">
+                    <div class="wish-item">
+                        <i class="ph-thin ph-star-four wish-icon"></i>
+                        <div class="wish-text">
+                            <h4>Bhule jao ex ke(if ya have) </h4>
+                            <span>Beche nao Akash ke, I mean amake..🫶🏻😭</span>
+                        </div>
+                    </div>
+                    <div class="wish-item">
+                        <i class="ph-thin ph-heart wish-icon"></i>
+                        <div class="wish-text">
+                            <h4>Amio single - Tumio single(IG) </h4>
+                            <span>Ekdom perfect match Tomar jonno, senior and junior..🙏🏻🥹</span>
+                        </div>
+                    </div>
+                    <div class="wish-item">
+                        <i class="ph-thin ph-crown wish-icon"></i>
+                        <div class="wish-text">
+                            <h4>Ami bachcha but caring</h4>
+                            <span> Shudu ektu immature ami, Tumi thik kore diyo Apu..🙏🏻😚.</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-gold" onclick="navTo(4)">Final Note</button>
+            </div>
+        </section>
+
+        <!-- 4. SIGNATURE -->
+        <section id="s4" class="section">
+            <div class="content-card anim-element">
+                <i class="ph-thin ph-infinity" style="font-size: 2.5rem; color: var(--gold-accent); margin-bottom: 1.5rem;"></i>
+                <h2 style="font-style: italic;">Happy New Year</h2>
+                <p class="card-text" style="margin-top: 1rem;">
+                    Chhoto ek digital jahan gori dilam,
+                    Shudhu tomar haashi dekhbar ashay.
+                    Esho, ei notun bochhore
+                    shob shwapno hok aguner moto ujjol, shonar moto daami <span class="highlight">thukku Tomar moto..</span>
+                   </p>
+                <p class="card-text">
+                   <span class="highlight">Eitao Chat-GPT er text btw..🙏🏻😚</span>
+                </p>
+
+                <div class="dev-credit">
+                    <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">Designed by</p>
+                    <div class="signature">Akhil Rashed</div>
+                    <div style="margin-top: 15px; opacity: 0.6;">
+                        <i class="ph-logo ph-github-logo" style="margin: 0 5px;"></i>
+                        <i class="ph-logo ph-linkedin-logo" style="margin: 0 5px;"></i>
+                    </div>
+                </div>
+
+                <button class="btn-gold" style="margin-top: 2rem; border-color: rgba(255,255,255,0.2); color: #fff;" onclick="location.reload()">
+                    Replay
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Three.js Logic -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- AUDIO SYSTEM ---
+        const audio = document.getElementById('bg-audio');
+        const eq = document.getElementById('eq');
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if(!isPlaying) {
+                audio.volume = 0;
+                audio.play();
+                fadeInAudio();
+                eq.classList.remove('paused');
+                isPlaying = true;
+            } else {
+                audio.pause();
+                eq.classList.add('paused');
+                isPlaying = false;
+            }
+        }
+
+        function fadeInAudio() {
+            if(audio.volume < 0.5) {
+                audio.volume += 0.05;
+                setTimeout(fadeInAudio, 200);
+            }
+        }
+
+        // --- NAVIGATION SYSTEM ---
+        function navTo(screenNum) {
+            // Audio auto-start on first click if not playing
+            if(screenNum === 2 && !isPlaying) toggleAudio();
+
+            // Fade out current
+            const active = document.querySelector('.section.active');
+            active.classList.remove('active');
+
+            // Wait for css transition, then show next
+            setTimeout(() => {
+                document.getElementById('s' + screenNum).classList.add('active');
+            }, 600);
+        }
+
+        // --- PREMIUM 3D VISUALS (Celestial Sphere) ---
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        
+        // Deep fog for depth
+        scene.fog = new THREE.FogExp2(0x050505, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // CREATE PARTICLES
+        const geometry = new THREE.BufferGeometry();
+        const count = 3000;
+        const positions = new Float32Array(count * 3);
+        const sizes = new Float32Array(count);
+
+        for (let i = 0; i < count; i++) {
+            // Spherical distribution
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            const r = 4 + Math.random() * 2; // Radius between 4 and 6
+
+            const x = r * Math.sin(phi) * Math.cos(theta);
+            const y = r * Math.sin(phi) * Math.sin(theta);
+            const z = r * Math.cos(phi);
+
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+            
+            sizes[i] = Math.random();
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        // Custom Shader Material for Gold/Silver sparkle
+        const material = new THREE.PointsMaterial({
+            size: 0.03,
+            color: 0xD4AF37, // Gold
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+
+        // Add secondary subtle particles
+        const geometry2 = new THREE.BufferGeometry();
+        const pos2 = new Float32Array(1000 * 3);
+        for(let i=0; i<1000*3; i++) {
+            pos2[i] = (Math.random() - 0.5) * 15;
+        }
+        geometry2.setAttribute('position', new THREE.BufferAttribute(pos2, 3));
+        const mat2 = new THREE.PointsMaterial({
+            size: 0.01,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3
+        });
+
+        const sphere = new THREE.Points(geometry, material);
+        const dust = new THREE.Points(geometry2, mat2);
+        
+        scene.add(sphere);
+        scene.add(dust);
+
+        camera.position.z = 8;
+
+        // ANIMATION LOOP
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        // Smooth interaction
+        let targetX = 0;
+        let targetY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
+        });
+        
+        // Touch support
+        document.addEventListener('touchmove', (e) => {
+             mouseX = (e.touches[0].clientX - window.innerWidth / 2) * 0.0005;
+             mouseY = (e.touches[0].clientY - window.innerHeight / 2) * 0.0005;
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            const time = clock.getElapsedTime();
+
+            targetX = mouseX * 0.5;
+            targetY = mouseY * 0.5;
+
+            // Rotate sphere slowly
+            sphere.rotation.y = time * 0.05;
+            sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
+            sphere.rotation.z += 0.05 * (targetX - sphere.rotation.z);
+
+            // Floating dust effect
+            dust.rotation.y = -time * 0.02;
+            
+            // Gentle wave movement
+            const positions = sphere.geometry.attributes.position.array;
+            for(let i=0; i<count; i++) {
+               // Subtle breathing effect on sphere
+            }
+            sphere.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Responsive
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+  </html>
